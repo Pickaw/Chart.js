@@ -295,10 +295,33 @@ var Legend = Element.extend({
 			var totalWidth = labelOpts.padding;
 			var currentColWidth = 0;
 			var currentColHeight = 0;
+      let maxComputedWidth = Infinity
+
+      let mcs = me.chart.options.mainChartSize
+      if (mcs) {
+
+        if (mcs < 1)
+          maxComputedWidth = (1 - mcs) * me.chart.width
+        else
+          maxComputedWidth = me.chart.width - mcs
+
+        maxComputedWidth -= getBoxWidth(labelOpts, fontSize) + (fontSize / 2)
+
+      }
 
 			helpers.each(me.legendItems, function(legendItem, i) {
-				var boxWidth = getBoxWidth(labelOpts, fontSize);
-				var itemWidth = boxWidth + (fontSize / 2) + ctx.measureText(legendItem.text).width;
+        var boxWidth = getBoxWidth(labelOpts, fontSize);
+
+        if (ctx.measureText(legendItem.text).width > maxComputedWidth) {
+          do {
+
+            legendItem.text = legendItem.text.substr(0, legendItem.text.length - 1).trim()
+
+          } while (legendItem.text && ctx.measureText(legendItem.text + '…').width > maxComputedWidth)
+          legendItem.text += '…'
+        }
+
+				var itemWidth = boxWidth + (fontSize / 2) + (maxComputedWidth < Infinity ? maxComputedWidth : ctx.measureText(legendItem.text).width);
 
 				// If too tall, go to new column
 				if (i > 0 && currentColHeight + fontSize + 2 * vPadding > minSize.height) {
